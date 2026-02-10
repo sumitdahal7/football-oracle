@@ -2,7 +2,7 @@
 
 **Football Oracle** is a premium, AI-driven football match analysis dashboard. It combines real-time statistics from professional sports APIs with the analytical power of Google's Gemini 2.0 Flash to provide users with elite-level tactical breakdowns and match predictions.
 
-![Football Oracle Dashboard](https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2000&auto=format&fit=crop) _(Demo image placeholder - replace with actual screenshot if available)_
+![Football Oracle Dashboard](https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2000&auto=format&fit=crop)
 
 ## ✨ Key Features
 
