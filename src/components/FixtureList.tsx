@@ -18,7 +18,7 @@ import { Prediction } from "@/lib/schemas";
 import { toast } from "sonner";
 
 interface ExtendedPrediction extends Prediction {
-  sources?: { title: string; uri: string }[];
+  sources?: { title: string; uri: string }[] | null;
   searchHtml?: string | null;
 }
 
