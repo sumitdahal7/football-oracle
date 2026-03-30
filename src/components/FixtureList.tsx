@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   TrendingUp,
   Loader2,
@@ -12,28 +13,21 @@ import {
 } from "lucide-react";
 import { predictMatch, fetchLiveStats } from "@/app/actions";
 import { motion, AnimatePresence } from "framer-motion";
-import { Match, MatchStats } from "@/lib/football-data";
+import { Match, MatchStats, getMockStats } from "@/lib/football-data";
+import { Prediction } from "@/lib/schemas";
 import { toast } from "sonner";
 
-interface Prediction {
-  winner: string;
-  scoreline: string;
-  winProbability: {
-    home: number;
-    away: number;
-    draw: number;
-  };
-  tacticalBreakdown: string;
+interface ExtendedPrediction extends Prediction {
   sources?: { title: string; uri: string }[];
-  searchHtml?: string;
+  searchHtml?: string | null;
 }
 
 export default function FixtureList({ matches }: { matches: Match[] }) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [loadingId, setLoadingId] = useState<number | null>(null);
-  const [predictions, setPredictions] = useState<Record<number, Prediction>>(
-    {},
-  );
+  const [predictions, setPredictions] = useState<
+    Record<number, ExtendedPrediction>
+  >({});
   const [visibleCount, setVisibleCount] = useState(5);
   const [liveStats, setLiveStats] = useState<Record<number, MatchStats>>({});
   const [fetchingStatsId, setFetchingStatsId] = useState<number | null>(null);
@@ -83,51 +77,6 @@ export default function FixtureList({ matches }: { matches: Match[] }) {
         setFetchingStatsId(null);
       }
     }
-  };
-
-  // Helper to generate deterministic mock stats for the "Match Center" step
-  const getMockStats = (match: Match) => {
-    const hash = (str: string) => {
-      let h = 0;
-      for (let i = 0; i < str.length; i++) {
-        h = (h << 5) - h + str.charCodeAt(i);
-        h |= 0;
-      }
-      return Math.abs(h);
-    };
-
-    const hName = match.homeTeam.shortName;
-    const aName = match.awayTeam.shortName;
-    const mId = match.id;
-
-    // Logic for form - Man United fix for user
-    const generateForm = (name: string, isHome: boolean) => {
-      if (name.includes("Man United")) return ["W", "W", "W", "W", "D"];
-      const outcomes = ["W", "D", "L", "W", "W", "D", "W", "L"];
-      const seed = hash(name + (isHome ? "home" : "away") + mId);
-      return Array.from(
-        { length: 5 },
-        (_, i) => outcomes[(seed + i) % outcomes.length],
-      );
-    };
-
-    const hSeed = hash(hName + mId);
-    const aSeed = hash(aName + mId);
-
-    return {
-      homeForm: generateForm(hName, true),
-      awayForm: generateForm(aName, false),
-      h2h: {
-        homeWins: (hSeed % 15) + 5,
-        awayWins: (aSeed % 12) + 3,
-        draws: ((hSeed + aSeed) % 8) + 2,
-        lastResult: `${match.homeTeam.tla} ${hSeed % 3}-${aSeed % 3} ${match.awayTeam.tla}`,
-      },
-      winRate: {
-        home: 40 + (hSeed % 45),
-        away: 30 + (aSeed % 45),
-      },
-    };
   };
 
   // Group matches by date
@@ -218,9 +167,11 @@ export default function FixtureList({ matches }: { matches: Match[] }) {
                         {/* Teams */}
                         <div className="flex-1 flex items-center justify-center gap-8 md:gap-12">
                           <div className="flex flex-col items-center gap-3 text-center w-28 md:w-36">
-                            <img
+                            <Image
                               src={match.homeTeam.crest}
                               alt={match.homeTeam.name}
+                              width={64}
+                              height={64}
                               className="w-12 h-12 md:w-16 md:h-16 object-contain drop-shadow-2xl transition-transform group-hover:scale-110 duration-500"
                             />
                             <span className="font-bold text-sm md:text-base leading-tight">
@@ -233,9 +184,11 @@ export default function FixtureList({ matches }: { matches: Match[] }) {
                           </div>
 
                           <div className="flex flex-col items-center gap-3 text-center w-28 md:w-36">
-                            <img
+                            <Image
                               src={match.awayTeam.crest}
                               alt={match.awayTeam.name}
+                              width={64}
+                              height={64}
                               className="w-12 h-12 md:w-16 md:h-16 object-contain drop-shadow-2xl transition-transform group-hover:scale-110 duration-500"
                             />
                             <span className="font-bold text-sm md:text-base leading-tight">

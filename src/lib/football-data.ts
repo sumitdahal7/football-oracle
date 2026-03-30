@@ -195,7 +195,7 @@ export async function getMatchStats(
 
     // Helper to calculate form from matches
     const calculateForm = (matches: Match[], teamId: number) => {
-      return matches.map((m) => {
+      return matches.map((m: Match) => {
         const isHome = m.homeTeam.id === teamId;
         const score = m.score?.fullTime;
         if (!score || score.home === null || score.away === null) return "D";
@@ -235,3 +235,48 @@ export async function getMatchStats(
     return null;
   }
 }
+
+// Helper to generate deterministic mock stats for the "Match Center" step
+export const getMockStats = (match: Match): MatchStats => {
+  const hash = (str: string) => {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+      h = (h << 5) - h + str.charCodeAt(i);
+      h |= 0;
+    }
+    return Math.abs(h);
+  };
+
+  const hName = match.homeTeam.shortName;
+  const aName = match.awayTeam.shortName;
+  const mId = match.id;
+
+  // Logic for form - Man United fix for user
+  const generateForm = (name: string, isHome: boolean) => {
+    if (name.includes("Man United")) return ["W", "W", "W", "W", "D"];
+    const outcomes = ["W", "D", "L", "W", "W", "D", "W", "L"];
+    const seed = hash(name + (isHome ? "home" : "away") + mId);
+    return Array.from(
+      { length: 5 },
+      (_, i) => outcomes[(seed + i) % outcomes.length],
+    );
+  };
+
+  const hSeed = hash(hName + mId);
+  const aSeed = hash(aName + mId);
+
+  return {
+    homeForm: generateForm(hName, true),
+    awayForm: generateForm(aName, false),
+    h2h: {
+      homeWins: (hSeed % 15) + 5,
+      awayWins: (aSeed % 12) + 3,
+      draws: ((hSeed + aSeed) % 8) + 2,
+      lastResult: `${match.homeTeam.tla} ${hSeed % 3}-${aSeed % 3} ${match.awayTeam.tla}`,
+    },
+    winRate: {
+      home: 40 + (hSeed % 45),
+      away: 30 + (aSeed % 45),
+    },
+  };
+};

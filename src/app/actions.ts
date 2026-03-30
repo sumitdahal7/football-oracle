@@ -2,6 +2,7 @@
 
 import { genAI } from "@/lib/gemini";
 import { getMatchStats } from "@/lib/football-data";
+import { PredictionSchema } from "@/lib/schemas";
 
 export async function fetchLiveStats(
   matchId: number,
@@ -72,7 +73,7 @@ export async function predictMatch(homeTeam: string, awayTeam: string) {
 
     const model = genAI.getGenerativeModel({
       model: modelName,
-      tools: [{ googleSearchRetrieval: {} } as unknown as any],
+      tools: [{ googleSearchRetrieval: {} }],
     });
 
     const result = await model.generateContent({
@@ -84,7 +85,8 @@ export async function predictMatch(homeTeam: string, awayTeam: string) {
 
     const response = (await result.response) as unknown as GeminiResponse;
     const text = response.text();
-    const data = JSON.parse(text);
+    const parsedData = JSON.parse(text);
+    const data = PredictionSchema.parse(parsedData);
 
     // Extract grounding metadata
     const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
